@@ -78,6 +78,9 @@ public:
                              double& psnr,
                              double& maxError,
                              CImageDataset& errorImage);
+	static BOOL ApplyIdealHighPassFilter(std::vector<std::complex<double>>& dftResult,
+                                    int width, int height,
+                                    double cutoffFrequency);
 	
     
     // Æ×ÀàÐÍÃ¶¾Ù

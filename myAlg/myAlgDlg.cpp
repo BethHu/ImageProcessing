@@ -77,6 +77,7 @@ BEGIN_MESSAGE_MAP(CmyAlgDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_BilateralFilter, &CmyAlgDlg::OnClickedButtonBilateralfilter)
 	ON_BN_CLICKED(IDC_BUTTON_Laplacian, &CmyAlgDlg::OnClickedButtonLaplacian)
 	ON_BN_CLICKED(IDC_BUTTON_Fourier, &CmyAlgDlg::OnClickedButtonFourier)
+	ON_BN_CLICKED(IDC_BUTTON_IDEALHIGHPASS, &CmyAlgDlg::OnClickedButtonIdealhighpass)
 END_MESSAGE_MAP()
 
 
@@ -474,5 +475,66 @@ void CmyAlgDlg::OnClickedButtonFourier()
     else
     {
         TRACE(_T("用户选择不进行频谱分析\n"));
+    }
+}
+
+
+void CmyAlgDlg::OnClickedButtonIdealhighpass()
+{
+    try {
+        // 步骤1: 显示傅里叶输入对话框
+        CFourierInputDlg inputDlg;
+        if (inputDlg.DoModal() != IDOK)
+            return;
+        
+        // 步骤2: 显示频谱对话框（计算DFT）
+        // 注意：将 spectrumDlg 放在堆上，以便在 filterDlg 使用时不被销毁
+        // 同时也保存原始图像的副本，以确保它在整个工作流中有效
+        CFourierSpectrumDlg* pSpectrumDlg = new CFourierSpectrumDlg(&inputDlg.m_inputImage);
+        pSpectrumDlg->SetAutoShowInverseDFT(FALSE);  // 不自动显示反变换，让工作流继续
+        if (pSpectrumDlg->DoModal() != IDOK)
+        {
+            delete pSpectrumDlg;
+            return;
+        }
+        
+        AfxMessageBox(_T("即将进入理想高通滤波器对话框，请调整参数"));
+        
+        // 步骤3: 显示理想高通滤波器对话框
+        CIdealFilterDlg filterDlg(pSpectrumDlg);
+        int nResult = filterDlg.DoModal();
+        
+        if (nResult != IDOK)
+        {
+            AfxMessageBox(_T("用户取消了理想高通滤波器对话框"));
+            delete pSpectrumDlg;
+            return;
+        }
+        
+        AfxMessageBox(_T("理想高通滤波器已应用，即将进行反变换"));
+        
+        // 验证过滤器是否正确应用
+        if (filterDlg.m_filteredDFT.empty())
+        {
+            AfxMessageBox(_T("理想高通滤波器未正确应用！"));
+            delete pSpectrumDlg;
+            return;
+        }
+        
+        // 步骤4: 显示滤波后的逆变换对话框
+        CInverseDFTDlg inverseDlg(pSpectrumDlg);
+        inverseDlg.SetFilteredDFT(&filterDlg.m_filteredDFT);
+        inverseDlg.DoModal();
+        
+        // 清理堆内存
+        delete pSpectrumDlg;
+        
+    }
+    catch (CException* e) {
+        e->ReportError();
+        e->Delete();
+    }
+    catch (...) {
+        AfxMessageBox(_T("处理过程中发生未知错误！"));
     }
 }

@@ -109,6 +109,7 @@
     <ClInclude Include="FourierInputDlg.h" />
     <ClInclude Include="FourierSpectrumDlg.h" />
     <ClInclude Include="FourierTransform.h" />
+    <ClInclude Include="IdealFilterDlg.h" />
     <ClInclude Include="ImageProcessingEx.h" />
     <ClInclude Include="InverseDFTDlg.h" />
     <ClInclude Include="MedianFilterDlg.h" />
@@ -123,6 +124,7 @@
     <ClCompile Include="FourierInputDlg.cpp" />
     <ClCompile Include="FourierSpectrumDlg.cpp" />
     <ClCompile Include="FourierTransform.cpp" />
+    <ClCompile Include="IdealFilterDlg.cpp" />
     <ClCompile Include="ImageProcessingEx.cpp" />
     <ClCompile Include="InverseDFTDlg.cpp" />
     <ClCompile Include="MedianFilterDlg.cpp" />

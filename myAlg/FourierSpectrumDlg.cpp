@@ -37,7 +37,8 @@ CFourierSpectrumDlg::CFourierSpectrumDlg(CImageDataset* pInputImage, CWnd* pPare
 	m_bDFTComputed(FALSE),  // 添加这个
 	m_mse(0.0),            // 添加误差初始值
 	m_psnr(0.0),
-	m_maxError(0.0)
+	m_maxError(0.0),
+	m_bAutoShowInverseDFT(TRUE)  // 默认自动显示反变换对话框
 {
 
 }
@@ -133,6 +134,9 @@ BOOL CFourierSpectrumDlg::OnInitDialog()
 		// 清空显示图像
 		m_displayImage.clear();
 
+		// 自动计算DFT
+		ComputeDFT();
+
 		// 禁用应用按钮，直到选择谱类型
 		GetDlgItem(IDC_BUTTON_APPLY)->EnableWindow(FALSE);
 	}
@@ -148,10 +152,10 @@ BOOL CFourierSpectrumDlg::OnInitDialog()
 
 void CFourierSpectrumDlg::OnDestroy()
 {
-	// 清理资源
+	// 清理资源（但不清空DFT结果，因为其他对话框可能仍在使用）
 	m_displayImage.clear();
-	m_dftResult.clear();
-	m_dftResultCentered.clear(); // 添加中心化版本的清理
+	// 注意：不清空 m_dftResult 和 m_dftResultCentered
+	// 因为在理想高通滤波器工作流中，对话框关闭后这些数据仍然被需要
 	CDialogEx::OnDestroy();
 }
 
@@ -660,8 +664,18 @@ void CFourierSpectrumDlg::OnBnClickedButtonApply()
 
 void CFourierSpectrumDlg::OnOK()
 {
-	CInverseDFTDlg dlg(this);
-	dlg.DoModal();
+	// 根据标志决定是否自动显示反变换对话框
+	if (m_bAutoShowInverseDFT)
+	{
+		// 原有行为：直接显示反变换对话框（用于傅里叶变换功能）
+		CInverseDFTDlg dlg(this);
+		dlg.DoModal();
+	}
+	else
+	{
+		// 新行为：仅关闭对话框，让调用者继续工作流（用于理想高通滤波器功能）
+		CDialogEx::OnOK();
+	}
 }
 
 

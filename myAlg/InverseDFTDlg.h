@@ -16,11 +16,19 @@ public:
 
 	enum { IDD = IDD_INVERSEDFTDLG };
 
+	// 用于接收过滤后的 DFT 数据
+	void SetFilteredDFT(std::vector<std::complex<double>>* pFilteredDFT)
+	{
+		m_pFilteredDFT = pFilteredDFT;
+	}
+
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);
 	virtual BOOL OnInitDialog();
 
 	CFourierSpectrumDlg* m_pParentDlg;
+	std::vector<std::complex<double>>* m_pFilteredDFT;  // 指向过滤后的 DFT 数据
+	
 	CImageDataset m_reconstructedImage;
 	CImageDataset m_errorImage;
 	double m_mse;

@@ -235,8 +235,29 @@ void CFourierInputDlg::OnBnClickedButtonBrowse()
     {
         m_readImagePath = dlg.GetPathName();
         UpdateData(FALSE);  // 更新控件显示
+        
+        // 立即尝试读取并显示选择的图像
+        CImageDataset tempImage;
+        if (CImageIO::read(tempImage, m_readImagePath))
+        {
+            // 显示图像预览窗口
+            CImageDisplay::show(tempImage, this, _T("选择的图像"), 1, 1, 1, 0);
+            
+            // 同时显示图像信息确认
+            CString strMsg;
+            strMsg.Format(_T("图像已加载\n\n宽度：%d\n高度：%d\n通道数：%d\n\n点击'下一步'继续分析此图像"),
+                         tempImage.m_xsize, tempImage.m_ysize, tempImage.m_rastercount);
+            AfxMessageBox(strMsg, MB_ICONINFORMATION);
+        }
+        else
+        {
+            AfxMessageBox(_T("无法读取选择的图像文件！"));
+            m_readImagePath.Empty();
+            UpdateData(FALSE);
+        }
     }
 }
+
 
 void CFourierInputDlg::OnBnClickedButtonPreview()
 {
@@ -244,7 +265,14 @@ void CFourierInputDlg::OnBnClickedButtonPreview()
     
     if (GeneratePreviewImage())
     {
-        AfxMessageBox(_T("预览图像生成成功！"));
+        // 显示生成的预览图像的实际样子
+        CImageDisplay::show(m_inputImage, this, _T("生成的图像预览"), 1, 1, 1, 0);
+        
+        // 同时显示图像参数确认
+        CString strMsg;
+        strMsg.Format(_T("图像生成成功\n\n宽度：%d\n高度：%d\n通道数：%d\n\n点击'下一步'继续分析此图像"),
+                     m_genWidth, m_genHeight, m_inputImage.m_rastercount);
+        AfxMessageBox(strMsg, MB_ICONINFORMATION);
     }
     else
     {
@@ -500,8 +528,11 @@ void CFourierInputDlg::OnOK()
         TRACE(_T("生成图像成功，尺寸：%dx%d\n"), 
               m_inputImage.m_xsize, m_inputImage.m_ysize);
         
-        // 显示一个简单的提示
-        AfxMessageBox(_T("图像生成成功！点击确定继续到频谱分析。"));
+        // 显示一个详细的提示，显示生成的图像信息
+        CString strMsg;
+        strMsg.Format(_T("图像生成成功！\n\n图像尺寸：%d × %d\n通道数：%d\n\n点击确定继续到频谱分析"),
+                     m_inputImage.m_xsize, m_inputImage.m_ysize, m_inputImage.m_rastercount);
+        AfxMessageBox(strMsg, MB_ICONINFORMATION);
     }
     else  // 读取图像模式
     {
@@ -522,8 +553,11 @@ void CFourierInputDlg::OnOK()
         TRACE(_T("读取图像成功，尺寸：%dx%d，通道数：%d\n"), 
               m_inputImage.m_xsize, m_inputImage.m_ysize, m_inputImage.m_rastercount);
         
-        // 显示一个简单的提示
-        AfxMessageBox(_T("图像读取成功！点击确定继续到频谱分析。"));
+        // 显示一个详细的提示，显示读取的图像信息
+        CString strMsg;
+        strMsg.Format(_T("图像读取成功！\n\n文件名：%s\n图像尺寸：%d × %d\n通道数：%d\n\n点击确定继续到频谱分析"),
+                     (LPCTSTR)m_readImagePath, m_inputImage.m_xsize, m_inputImage.m_ysize, m_inputImage.m_rastercount);
+        AfxMessageBox(strMsg, MB_ICONINFORMATION);
     }
     
     // 所有验证通过，关闭对话框

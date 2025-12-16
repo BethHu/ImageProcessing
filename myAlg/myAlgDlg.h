@@ -10,6 +10,8 @@
 #include "BilateralFilter.h"
 #include "FourierInputDlg.h"
 #include "FourierSpectrumDlg.h"
+#include "IdealFilterDlg.h"
+#include "InverseDFTDlg.h"
 
 
 
@@ -22,7 +24,10 @@ public:
 
 // Dialog Data
 	enum { IDD = IDD_MYALG_DIALOG };
-
+	std::vector<std::complex<double>> m_currentDFTResult;  // 当前DFT结果
+	int m_currentDFTWidth;                                  // DFT宽度
+	int m_currentDFTHeight;                                 // DFT高度
+	BOOL m_bDFTComputed; 
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
 
@@ -54,4 +59,5 @@ public:
 	afx_msg void OnClickedButtonBilateralfilter();
 	afx_msg void OnClickedButtonLaplacian();
 	afx_msg void OnClickedButtonFourier();
+	afx_msg void OnClickedButtonIdealhighpass();
 };

@@ -21,6 +21,9 @@ public:
     double GetMaxError() const { return m_maxError; }
 	int ComputeInverseDFT();
     void ShowErrorAnalysis();
+    
+    // 设置是否自动显示反变换对话框
+    void SetAutoShowInverseDFT(BOOL bAutoShow) { m_bAutoShowInverseDFT = bAutoShow; }
 
     enum { IDD = IDD_FOURIERSPECTRUMDLG };
 
@@ -53,14 +56,14 @@ private:
 	void DisplayImageDirectly(CDC& dc, CRect& imageRect);
 	void fftshift(std::vector<std::complex<double>>& data, int width, int height); 
 
-
-    
-    // 反变换和误差分析函数
-
-
-
-    CImageDataset* m_pInputImage;
+public:
+    // DFT 相关数据 - 改为 public 以供其他对话框使用
     std::vector<std::complex<double>> m_dftResult;
+    int m_dftWidth;
+    int m_dftHeight;
+
+private:
+    CImageDataset* m_pInputImage;
 	std::vector<std::complex<double>> m_dftResultCentered;
     CImageDataset m_displayImage;
     
@@ -94,16 +97,18 @@ private:
     // Radial spectrum parameters
     int m_nRadialBins;
     double m_dMaxRadius;
-    
-    int m_dftWidth;
-    int m_dftHeight;
 
-	BOOL m_bDFTComputed;  // 标记DFT是否已计算
     CImageDataset m_reconstructedImage;  // 重建图像
     CImageDataset m_errorImage;          // 误差图像
     double m_mse;                        // 均方误差
     double m_psnr;                       // PSNR
     double m_maxError;                   // 最大误差
+    BOOL m_bAutoShowInverseDFT;          // 是否自动显示反变换对话框（默认TRUE）
 public:
 	BOOL m_bCenter;
+	std::vector<std::complex<double>>& GetDFTResult() { return m_dftResult; }
+	int GetDFTWidth() const { return m_dftWidth; }
+	int GetDFTHeight() const { return m_dftHeight; }
+	BOOL IsDFTComputed() const { return m_bDFTComputed; }
+	BOOL m_bDFTComputed; 
 };

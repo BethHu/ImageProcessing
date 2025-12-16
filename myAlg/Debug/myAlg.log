@@ -1,13 +1,15 @@
-﻿生成启动时间为 2025/12/13 16:25:26。
+﻿生成启动时间为 2025/12/16 19:13:34。
      1>项目“F:\rsdiplib\code\myAlg\myAlg\myAlg.vcxproj”在节点 2 上(build 个目标)。
      1>InitializeBuildStatus:
-         正在创建“Debug\myAlg.unsuccessfulbuild”，因为已指定“AlwaysCreate”。
+         正在对“Debug\myAlg.unsuccessfulbuild”执行 Touch 任务。
        ClCompile:
          所有输出均为最新。
-         d:\vs studio2010\VC\bin\CL.exe /c /I..\rsdiplib\include /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D _MBCS /D _AFXDLL /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"Debug\myAlg.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt InverseDFTDlg.cpp
-         InverseDFTDlg.cpp
+         d:\vs studio2010\VC\bin\CL.exe /c /I..\rsdiplib\include /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D _MBCS /D _AFXDLL /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"Debug\myAlg.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt myAlg.cpp myAlgDlg.cpp
+         myAlgDlg.cpp
+         myAlg.cpp
+         正在生成代码...
        ResourceCompile:
-         所有输出均为最新。
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /D _DEBUG /D _AFXDLL /l"0x0409" /IDebug\ /nologo /fo"Debug\myAlg.res" myAlg.rc 
        ManifestResourceCompile:
          所有输出均为最新。
        Link:
@@ -17,6 +19,7 @@
          Debug\FourierInputDlg.obj
          Debug\FourierSpectrumDlg.obj
          Debug\FourierTransform.obj
+         Debug\IdealFilterDlg.obj
          Debug\ImageProcessingEx.obj
          Debug\InverseDFTDlg.obj
          Debug\MedianFilterDlg.obj
@@ -51,4 +54,4 @@
 
 生成成功。
 
-已用时间 00:00:05.87
+已用时间 00:00:08.24
