@@ -46,6 +46,30 @@ BOOL CInverseDFTDlg::OnInitDialog()
     return TRUE;
 }
 
+// 辅助函数：对重建图像做最小-最大归一化到 [0,255]
+static void NormalizeToByteRange(CImageDataset& img)
+{
+	if (img.empty() || !img.m_data) return;
+	int W = img.m_xsize, H = img.m_ysize;
+	int N = W * H;
+	double minV = img.m_data[0], maxV = img.m_data[0];
+	for (int i = 1; i < N; ++i)
+	{
+		double v = img.m_data[i];
+		if (v < minV) minV = v;
+		if (v > maxV) maxV = v;
+	}
+	double range = maxV - minV;
+	if (range <= 1e-12) return; // 避免除零；全常量图像无需归一化
+	for (int i = 0; i < N; ++i)
+	{
+		double v = (img.m_data[i] - minV) * 255.0 / range;
+		if (v < 0.0) v = 0.0;
+		if (v > 255.0) v = 255.0;
+		img.m_data[i] = v;
+	}
+}
+
 void CInverseDFTDlg::OnBnClickedButtonInverse()
 {
     if (!m_pParentDlg)
@@ -63,6 +87,8 @@ void CInverseDFTDlg::OnBnClickedButtonInverse()
         if (CFourierTransform::IDFT2D(*m_pFilteredDFT, m_reconstructedImage, 
                                      m_pParentDlg->m_dftWidth, m_pParentDlg->m_dftHeight))
         {
+			// 重要：高通滤波后图像可能为零均值或包含负值，进行归一化拉伸到[0,255]
+			NormalizeToByteRange(m_reconstructedImage);
             // 重要：将重建结果也保存到父对话框中，以便后续显示
             CImageDataset& parentReconstructed = m_pParentDlg->GetReconstructedImage();
             m_reconstructedImage.duplicate(parentReconstructed);
@@ -86,6 +112,9 @@ void CInverseDFTDlg::OnBnClickedButtonInverse()
         
         if (m_pParentDlg->ComputeInverseDFT())
         {
+			// 对父对话框中的重建图像做归一化，避免显示过暗
+			CImageDataset& reconstructed = m_pParentDlg->GetReconstructedImage();
+			NormalizeToByteRange(reconstructed);
             GetDlgItem(IDC_BUTTON_ERROR)->EnableWindow(TRUE);
             GetDlgItem(IDC_BUTTON_COMPARE)->EnableWindow(TRUE);
             AfxMessageBox(_T("反变换成功"));

@@ -62,6 +62,9 @@ public:
     int m_dftWidth;
     int m_dftHeight;
 
+    // 提供中心化频谱的访问器用于滤波掩模构造
+    std::vector<std::complex<double>>& GetDFTCenteredResult() { return m_dftResultCentered; }
+
 private:
     CImageDataset* m_pInputImage;
 	std::vector<std::complex<double>> m_dftResultCentered;

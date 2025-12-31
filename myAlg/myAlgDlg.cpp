@@ -498,7 +498,7 @@ void CmyAlgDlg::OnClickedButtonIdealhighpass()
             return;
         }
         
-        AfxMessageBox(_T("即将进入理想高通滤波器对话框，请调整参数"));
+        AfxMessageBox(_T("即将进入高通滤波器对话框，请调整参数"));
         
         // 步骤3: 显示理想高通滤波器对话框
         CIdealFilterDlg filterDlg(pSpectrumDlg);
@@ -506,17 +506,17 @@ void CmyAlgDlg::OnClickedButtonIdealhighpass()
         
         if (nResult != IDOK)
         {
-            AfxMessageBox(_T("用户取消了理想高通滤波器对话框"));
+            AfxMessageBox(_T("用户取消了高通滤波器对话框"));
             delete pSpectrumDlg;
             return;
         }
         
-        AfxMessageBox(_T("理想高通滤波器已应用，即将进行反变换"));
+        AfxMessageBox(_T("高通滤波器已应用，即将进行反变换"));
         
         // 验证过滤器是否正确应用
         if (filterDlg.m_filteredDFT.empty())
         {
-            AfxMessageBox(_T("理想高通滤波器未正确应用！"));
+            AfxMessageBox(_T("高通滤波器未正确应用！"));
             delete pSpectrumDlg;
             return;
         }
@@ -525,6 +525,21 @@ void CmyAlgDlg::OnClickedButtonIdealhighpass()
         CInverseDFTDlg inverseDlg(pSpectrumDlg);
         inverseDlg.SetFilteredDFT(&filterDlg.m_filteredDFT);
         inverseDlg.DoModal();
+
+        // 将重建结果复制到主对话框的输出图像，便于使用“保存”按钮写盘
+        CImageDataset& reconstructed = pSpectrumDlg->GetReconstructedImage();
+        if (!reconstructed.empty())
+        {
+            if (FALSE == reconstructed.duplicate(imgOut))
+            {
+                TRACE(_T("复制重建图像到输出缓冲失败\n"));
+            }
+            else
+            {
+                TRACE(_T("已将重建图像复制到主窗口的输出图像，可直接保存\n"));
+                AfxMessageBox(_T("重建图像已复制到主窗口的输出图像，点击“Write”可保存。"));
+            }
+        }
         
         // 清理堆内存
         delete pSpectrumDlg;
