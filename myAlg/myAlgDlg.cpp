@@ -8,6 +8,7 @@
 #include "afxdialogex.h"
 #include "FourierInputDlg.h"
 #include "FourierSpectrumDlg.h"
+#include "WedgeFilterDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -78,6 +79,7 @@ BEGIN_MESSAGE_MAP(CmyAlgDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_Laplacian, &CmyAlgDlg::OnClickedButtonLaplacian)
 	ON_BN_CLICKED(IDC_BUTTON_Fourier, &CmyAlgDlg::OnClickedButtonFourier)
 	ON_BN_CLICKED(IDC_BUTTON_IDEALHIGHPASS, &CmyAlgDlg::OnClickedButtonIdealhighpass)
+    ON_BN_CLICKED(IDC_BUTTON1, &CmyAlgDlg::OnClickedButtonWedge)
 END_MESSAGE_MAP()
 
 
@@ -552,4 +554,50 @@ void CmyAlgDlg::OnClickedButtonIdealhighpass()
     catch (...) {
         AfxMessageBox(_T("处理过程中发生未知错误！"));
     }
+}
+
+// Wedge 去条带工作流：输入→频谱→Wedge→反变换→复制到输出
+void CmyAlgDlg::OnClickedButtonWedge()
+{
+    try {
+        // 1. 输入图像选择或生成
+        CFourierInputDlg inputDlg;
+        if (inputDlg.DoModal() != IDOK) return;
+
+        // 2. 频谱显示(计算DFT)，不自动弹反变换
+        CFourierSpectrumDlg* pSpectrumDlg = new CFourierSpectrumDlg(&inputDlg.m_inputImage);
+        pSpectrumDlg->SetAutoShowInverseDFT(FALSE);
+        if (pSpectrumDlg->DoModal() != IDOK) { delete pSpectrumDlg; return; }
+
+        AfxMessageBox(_T("即将进入 Wedge 滤波对话框，请设置角度参数"));
+
+        // 3. Wedge 滤波
+        CWedgeFilterDlg wedgeDlg(pSpectrumDlg);
+        if (wedgeDlg.DoModal() != IDOK) { delete pSpectrumDlg; return; }
+        if (wedgeDlg.m_filteredDFT.empty()) {
+            AfxMessageBox(_T("Wedge 滤波未成功应用！"));
+            delete pSpectrumDlg; return;
+        }
+
+        AfxMessageBox(_T("Wedge 滤波已应用，即将进行反变换"));
+
+        // 4. 反变换
+        CInverseDFTDlg inverseDlg(pSpectrumDlg);
+        inverseDlg.SetFilteredDFT(&wedgeDlg.m_filteredDFT);
+        inverseDlg.DoModal();
+
+        // 5. 将重建结果复制到输出图像，便于保存
+        CImageDataset& reconstructed = pSpectrumDlg->GetReconstructedImage();
+        if (!reconstructed.empty()) {
+            if (FALSE == reconstructed.duplicate(imgOut)) {
+                TRACE(_T("复制重建图像到输出缓冲失败\n"));
+            } else {
+                AfxMessageBox(_T("结果已复制到主窗口输出图像，点击 \"保存\" 可写盘。"));
+            }
+        }
+
+        delete pSpectrumDlg;
+    }
+    catch (CException* e) { e->ReportError(); e->Delete(); }
+    catch (...) { AfxMessageBox(_T("Wedge 处理过程中发生未知错误！")); }
 }

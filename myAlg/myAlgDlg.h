@@ -60,4 +60,5 @@ public:
 	afx_msg void OnClickedButtonLaplacian();
 	afx_msg void OnClickedButtonFourier();
 	afx_msg void OnClickedButtonIdealhighpass();
+	afx_msg void OnClickedButtonWedge();
 };

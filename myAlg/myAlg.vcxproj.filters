@@ -63,6 +63,12 @@
     <ClInclude Include="IdealFilterDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="WedgeFilterDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="OtsuDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="myAlg.cpp">
@@ -96,6 +102,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="IdealFilterDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="WedgeFilterDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="OtsuDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
