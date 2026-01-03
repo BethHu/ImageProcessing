@@ -12,6 +12,7 @@
 #include "FourierSpectrumDlg.h"
 #include "IdealFilterDlg.h"
 #include "InverseDFTDlg.h"
+#include "OtsuDlg.h"
 
 
 
@@ -61,4 +62,5 @@ public:
 	afx_msg void OnClickedButtonFourier();
 	afx_msg void OnClickedButtonIdealhighpass();
 	afx_msg void OnClickedButtonWedge();
+	afx_msg void OnClickedButtonOtsu();
 };

@@ -80,6 +80,7 @@ BEGIN_MESSAGE_MAP(CmyAlgDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_Fourier, &CmyAlgDlg::OnClickedButtonFourier)
 	ON_BN_CLICKED(IDC_BUTTON_IDEALHIGHPASS, &CmyAlgDlg::OnClickedButtonIdealhighpass)
     ON_BN_CLICKED(IDC_BUTTON1, &CmyAlgDlg::OnClickedButtonWedge)
+    ON_BN_CLICKED(IDC_BUTTON_OSTU, &CmyAlgDlg::OnClickedButtonOtsu)
 END_MESSAGE_MAP()
 
 
@@ -600,4 +601,19 @@ void CmyAlgDlg::OnClickedButtonWedge()
     }
     catch (CException* e) { e->ReportError(); e->Delete(); }
     catch (...) { AfxMessageBox(_T("Wedge 处理过程中发生未知错误！")); }
+}
+
+// Otsu 图像分割：弹出参数对话框并基于当前输入图像执行
+void CmyAlgDlg::OnClickedButtonOtsu()
+{
+    if (imgIn.empty())
+    {
+        AfxMessageBox(_T("请先使用\"读取\"按钮输入图像！"));
+        return;
+    }
+
+    COtsuDlg dlg(this);
+    dlg.SetInputImage(&imgIn);
+    dlg.SetOutputImage(&imgOut);
+    dlg.DoModal();
 }
