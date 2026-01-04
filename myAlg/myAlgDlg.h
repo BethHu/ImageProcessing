@@ -63,4 +63,7 @@ public:
 	afx_msg void OnClickedButtonIdealhighpass();
 	afx_msg void OnClickedButtonWedge();
 	afx_msg void OnClickedButtonOtsu();
+	afx_msg void OnClickedButtonPca();
+	afx_msg void OnClickedButtonRgbihs();
+	afx_msg void OnClickedButtonCanny();
 };

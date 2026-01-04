@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{A14E3609-04A9-4AC5-8CAD-8A34050D5F4A}</ProjectGuid>
+    <ProjectGuid>{D99518CD-4063-410F-B4E2-1708D8DDFC57}</ProjectGuid>
     <RootNamespace>myAlg</RootNamespace>
     <Keyword>MFCProj</Keyword>
   </PropertyGroup>
@@ -52,6 +52,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\rsdiplib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -105,47 +106,33 @@
     <None Include="res\myAlg.rc2" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BilateralFilter.h" />
-    <ClInclude Include="CannyParamDlg.h" />
-    <ClInclude Include="FourierInputDlg.h" />
-    <ClInclude Include="FourierSpectrumDlg.h" />
-    <ClInclude Include="FourierTransform.h" />
-    <ClInclude Include="IdealFilterDlg.h" />
+    <ClInclude Include="BilateralParamDlg.h" />
     <ClInclude Include="ImageProcessingEx.h" />
-    <ClInclude Include="InverseDFTDlg.h" />
-    <ClInclude Include="MedianFilterDlg.h" />
+    <ClInclude Include="MedianParamDlg.h" />
     <ClInclude Include="myAlg.h" />
     <ClInclude Include="myAlgDlg.h" />
-    <ClInclude Include="OtsuDlg.h" />
-    <ClInclude Include="PcaChartDlg.h" />
     <ClInclude Include="PcaPParamDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="RgbIhsParamDlg.h" />
+    <ClInclude Include="CannyParamDlg.h" />
+    <ClInclude Include="PcaChartDlg.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="WedgeFilterDlg.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BilateralFilter.cpp" />
-    <ClCompile Include="CannyParamDlg.cpp" />
-    <ClCompile Include="FourierInputDlg.cpp" />
-    <ClCompile Include="FourierSpectrumDlg.cpp" />
-    <ClCompile Include="FourierTransform.cpp" />
-    <ClCompile Include="IdealFilterDlg.cpp" />
+    <ClCompile Include="BilateralParamDlg.cpp" />
     <ClCompile Include="ImageProcessingEx.cpp" />
-    <ClCompile Include="InverseDFTDlg.cpp" />
-    <ClCompile Include="MedianFilterDlg.cpp" />
+    <ClCompile Include="MedianParamDlg.cpp" />
     <ClCompile Include="myAlg.cpp" />
     <ClCompile Include="myAlgDlg.cpp" />
-    <ClCompile Include="OtsuDlg.cpp" />
-    <ClCompile Include="PcaChartDlg.cpp" />
     <ClCompile Include="PcaPParamDlg.cpp" />
     <ClCompile Include="RgbIhsParamDlg.cpp" />
+    <ClCompile Include="CannyParamDlg.cpp" />
+    <ClCompile Include="PcaChartDlg.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="WedgeFilterDlg.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="myAlg.rc" />

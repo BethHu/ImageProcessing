@@ -9,6 +9,11 @@
 #include "FourierInputDlg.h"
 #include "FourierSpectrumDlg.h"
 #include "WedgeFilterDlg.h"
+#include "ImageProcessingEx.h"
+#include "PcaPParamDlg.h"
+#include "RgbIhsParamDlg.h"
+#include "CannyParamDlg.h"
+#include "PcaChartDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -81,6 +86,9 @@ BEGIN_MESSAGE_MAP(CmyAlgDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_IDEALHIGHPASS, &CmyAlgDlg::OnClickedButtonIdealhighpass)
     ON_BN_CLICKED(IDC_BUTTON1, &CmyAlgDlg::OnClickedButtonWedge)
     ON_BN_CLICKED(IDC_BUTTON_OSTU, &CmyAlgDlg::OnClickedButtonOtsu)
+    ON_BN_CLICKED(IDC_BUTTON_PCA, &CmyAlgDlg::OnClickedButtonPca)
+    ON_BN_CLICKED(IDC_BUTTON_RGBIHS, &CmyAlgDlg::OnClickedButtonRgbihs)
+    ON_BN_CLICKED(IDC_BUTTON_CANNY, &CmyAlgDlg::OnClickedButtonCanny)
 END_MESSAGE_MAP()
 
 
@@ -420,6 +428,252 @@ void CmyAlgDlg::OnClickedButtonLaplacian()
     
     // 5. 提示保存
     AfxMessageBox(_T("拉普拉斯锐化完成！边缘和细节已增强。"));
+}
+
+// ===== 新增：主成分分析（PCA）入口 =====
+void CmyAlgDlg::OnClickedButtonPca()
+{
+
+    if (imgIn.empty() || imgIn.m_rastercount < 2)
+    {
+        AfxMessageBox(_T("请先使用 \"Read\" 按钮读取多波段实验数据（如 lanier.img，波段数≥2）！"));
+        return;
+    }
+    int nBandCount = imgIn.m_rastercount;
+
+    CPcaPParamDlg dlgP(this);
+    dlgP.SetBandCount(nBandCount);
+    int nPcaDlgRet = dlgP.DoModal();
+    if (nPcaDlgRet != IDOK)
+        return;
+
+    CImageDataset imgPCA;
+    CMatrix matT;
+    CMatrix matEigValues;
+    CMatrix matMean;
+    if (!CImageProcessingEx::pcaForward(imgIn, imgPCA, matT, matEigValues, matMean))
+    {
+        AfxMessageBox(_T("PCA 正变换失败！"));
+        return;
+    }
+
+    // 模式0：仅正变换（保存/显示主成分影像）
+    if (dlgP.m_bIsSingleMode == 0)
+    {
+        CImageDataset imgPCADisplay;
+        if (CImageProcessingEx::linearStretch(imgPCA, imgPCADisplay))
+        {
+            if (imgPCADisplay.m_rastercount >= 3)
+                CImageDisplay::show(imgPCADisplay, this, _T("主成分影像（前3分量）"), 1, 2, 3, 0);
+            else
+                CImageDisplay::show(imgPCADisplay, this, _T("主成分影像"), 1, 1, 1, 0);
+        }
+
+        if (IDYES == AfxMessageBox(_T("PCA 正变换成功！是否保存主成分影像？"), MB_YESNO))
+        {
+            CFileDialog dlgSave(FALSE, _T("tif"), _T("PCA_Result.tif"), OFN_OVERWRITEPROMPT,
+                _T("GeoTIFF文件 (*.tif)|*.tif|所有文件 (*.*)|*.*|"));
+            if (dlgSave.DoModal() == IDOK)
+            {
+                if (CImageIO::write(imgPCA, dlgSave.GetPathName()))
+                    AfxMessageBox(_T("主成分影像保存成功！"));
+                else
+                    AfxMessageBox(_T("保存失败！"));
+            }
+        }
+    }
+    // 模式1：单 p 值重建
+    else if (dlgP.m_bIsSingleMode == 1)
+    {
+        int nCustomP = dlgP.m_nSingleP;
+        CImageDataset imgRecon;
+        if (!CImageProcessingEx::pcaBackward(imgPCA, matT, matMean, nCustomP, imgRecon))
+        {
+            AfxMessageBox(_T("PCA 反变换失败！"));
+            return;
+        }
+
+        CString strDefaultFileName;
+        strDefaultFileName.Format(_T("PCA_Recon_p%d"), nCustomP);
+        CFileDialog dlgSave(FALSE, _T("tif"), strDefaultFileName, OFN_OVERWRITEPROMPT,
+            _T("GeoTIFF文件 (*.tif)|*.tif|所有文件 (*.*)|*.*|"));
+        if (dlgSave.DoModal() == IDOK)
+        {
+            if (CImageIO::write(imgRecon, dlgSave.GetPathName()))
+                AfxMessageBox(_T("PCA 重建影像保存成功！"));
+            else
+                AfxMessageBox(_T("保存重建影像失败！"));
+        }
+
+        double dRmse = CImageProcessingEx::calcPcaRmse(imgIn, imgRecon);
+        CString strRmseInfo;
+        strRmseInfo.Format(_T("PCA 重建完成（p=%d）！\n原始影像 vs 重建影像\nRMSE=%.6f"), nCustomP, dRmse);
+        AfxMessageBox(strRmseInfo);
+
+        CString strReconTitle;
+        strReconTitle.Format(_T("PCA 重建影像（p=%d）"), nCustomP);
+        CImageDisplay::show(imgRecon, this, strReconTitle, 1, 2, 3, 0);
+        CImageDisplay::show(imgIn, this, _T("原始影像"), 1, 2, 3, 0);
+    }
+    // 模式2：多 p 值误差分析
+    else
+    {
+        std::vector<int> vecMultiP = dlgP.m_vecMultiP;
+        std::vector<double> vecRmseResults;
+        std::vector<int> vecPResults;
+        CString strErrorResult = _T("多 p 值 PCA 重建误差（RMSE）结果：\n");
+
+        for (size_t i = 0; i < vecMultiP.size(); i++)
+        {
+            int nP = vecMultiP[i];
+            CImageDataset imgRecon;
+            if (CImageProcessingEx::pcaBackward(imgPCA, matT, matMean, nP, imgRecon))
+            {
+                double dRmse = CImageProcessingEx::calcPcaRmse(imgIn, imgRecon);
+                CString strLine;
+                strLine.Format(_T("p=%d → RMSE=%.6f\n"), nP, dRmse);
+                strErrorResult += strLine;
+                vecPResults.push_back(nP);
+                vecRmseResults.push_back(dRmse);
+            }
+            else
+            {
+                CString strP;
+                strP.Format(_T("p=%d"), nP);
+                strErrorResult += strP + _T(" → 计算失败\n");
+            }
+        }
+
+        AfxMessageBox(strErrorResult);
+
+        if (!vecPResults.empty())
+        {
+            CPcaChartDlg dlgChart(this);
+            dlgChart.SetData(vecPResults, vecRmseResults);
+            dlgChart.DoModal();
+        }
+
+        CFileDialog dlgSaveTxt(FALSE, _T("txt"), _T("PCA_MultiP_Error.txt"), OFN_OVERWRITEPROMPT,
+            _T("文本文件 (*.txt)|*.txt|所有文件 (*.*)|*.*|"));
+        if (dlgSaveTxt.DoModal() == IDOK)
+        {
+            CStdioFile file;
+            if (file.Open(dlgSaveTxt.GetPathName(), CFile::modeCreate | CFile::modeWrite | CFile::typeText))
+            {
+                file.WriteString(strErrorResult);
+                file.Close();
+                AfxMessageBox(_T("多 p 值误差结果保存成功！"));
+            }
+        }
+    }
+}
+
+// ===== 新增：RGB-IHS 变换入口 =====
+void CmyAlgDlg::OnClickedButtonRgbihs()
+{
+    if (imgIn.empty() || imgIn.m_rastercount != 3)
+    {
+        AfxMessageBox(_T("请先读取 3 波段 RGB 图像！"));
+        return;
+    }
+
+    CRgbIhsParamDlg dlg(this);
+    int nRgbIhsRet = dlg.DoModal();
+    if (nRgbIhsRet != IDOK)
+        return;
+
+    CImageDataset imgIHS;
+    if (!CImageProcessingEx::rgb2ihs(imgIn, imgIHS))
+    {
+        AfxMessageBox(_T("RGB-IHS 变换失败！"));
+        return;
+    }
+
+    CString strFileName = m_strImgInput;
+    int nPos = strFileName.ReverseFind('\\');
+    if (nPos != -1) strFileName = strFileName.Mid(nPos + 1);
+
+    if (dlg.m_bShowI || dlg.m_bShowH || dlg.m_bShowS)
+    {
+        CImageDataset imgIhsDisplay;
+        CImageProcessingEx::linearStretch(imgIHS, imgIhsDisplay);
+
+        if (dlg.m_bShowI)
+        {
+            CString strTitleI;
+            strTitleI.Format(_T("IHS 分量 - I (%s)"), strFileName);
+            CImageDisplay::show(imgIhsDisplay, this, strTitleI, 1, 1, 1, 0);
+        }
+        if (dlg.m_bShowH)
+        {
+            CString strTitleH;
+            strTitleH.Format(_T("IHS 分量 - H (%s)"), strFileName);
+            CImageDisplay::show(imgIhsDisplay, this, strTitleH, 2, 2, 2, 0);
+        }
+        if (dlg.m_bShowS)
+        {
+            CString strTitleS;
+            strTitleS.Format(_T("IHS 分量 - S (%s)"), strFileName);
+            CImageDisplay::show(imgIhsDisplay, this, strTitleS, 3, 3, 3, 0);
+        }
+    }
+
+    if (dlg.m_bShowRecon)
+    {
+        CImageDataset imgRecon;
+        if (!CImageProcessingEx::ihs2rgb(imgIHS, imgRecon))
+        {
+            AfxMessageBox(_T("IHS-RGB 反变换失败！"));
+            return;
+        }
+
+        double dRmse = CImageProcessingEx::calcPcaRmse(imgIn, imgRecon);
+        CString strTitleRecon;
+        strTitleRecon.Format(_T("IHS 反变换结果 (RMSE=%.6f)"), dRmse);
+        CImageDisplay::show(imgRecon, this, strTitleRecon, 1, 2, 3, 0);
+
+        CString strOriginTitle;
+        strOriginTitle.Format(_T("原始影像 (%s)"), strFileName);
+        CImageDisplay::show(imgIn, this, strOriginTitle, 1, 2, 3, 0);
+
+        imgRecon.duplicate(imgOut);
+        m_strImgOutput = _T("IHS_Recon.tif");
+        UpdateData(FALSE);
+    }
+}
+
+// ===== 新增：Canny 边缘检测入口 =====
+void CmyAlgDlg::OnClickedButtonCanny()
+{
+    if (imgIn.empty())
+    {
+        AfxMessageBox(_T("请先使用 \"Read\" 按钮读取输入图像！"));
+        return;
+    }
+
+    double recLow = 0.0, recHigh = 0.0;
+    CImageProcessingEx::getAutoCannyThresholds(imgIn, recLow, recHigh);
+
+    CCannyParamDlg dlg(this);
+    dlg.m_dLowThresh = recLow;
+    dlg.m_dHighThresh = recHigh;
+    dlg.m_pImgIn = &imgIn;
+    int nCannyRet = dlg.DoModal();
+    if (nCannyRet != IDOK)
+        return;
+
+    if (!CImageProcessingEx::cannyEdgeDetection(imgIn, imgOut, dlg.m_dSigma, dlg.m_dLowThresh, dlg.m_dHighThresh))
+    {
+        AfxMessageBox(_T("Canny 边缘检测失败！"));
+        return;
+    }
+
+    CString strTitle;
+    strTitle.Format(_T("Canny 边缘检测 (Sigma=%.1f, Low=%.1f, High=%.1f)"),
+                    dlg.m_dSigma, dlg.m_dLowThresh, dlg.m_dHighThresh);
+    CImageDisplay::show(imgOut, this, strTitle, 1, 1, 1, 0);
+    m_strImgOutput = _T("Canny_Edge.tif");
+    UpdateData(FALSE);
 }
 
 void CmyAlgDlg::OnClickedButtonFourier()
